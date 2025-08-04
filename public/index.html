@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tally Rebirth</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+  </style>
+  <body>
+    <form id="tallyForm">
+      <img src="./AHPL-logo.svg" alt="AHPL-logo" />
+      <h2>Record a Patron Interaction</h2>
+
+      <h3><label>Department:</label></h3>
+      <select id="department" required>
+        <option value="">Select</option>
+        <option value="Adult Services">Adult Services</option>
+        <option value="Youth Services">Youth Services</option>
+        <option value="Circulation">Circulation</option>
+        <option value="IT Department">IT Department</option>
+      </select>
+
+      <h3><label>Interaction Type:</label></h3>
+      <select id="qType" required>
+        <option value="Collections">Collections</option>
+        <option value="Research">Research</option>
+        <option value="Technology">Technology</option>
+        <option value="Patron Account">Patron Account</option>
+        <option value="Room Bookings">Room Bookings</option>
+        <option value="Programs">Programs</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <h3>
+        <label> Made Referral? <input type="checkbox" id="referral" /> </label>
+      </h3>
+
+      <h3><label for="notes">Notes (optional):</label></h3>
+      <textarea id="notes" rows="4"></textarea>
+
+      <button type="submit" class="tally-button">Tally!</button>
+      <button
+        type="button"
+        class="reports-button"
+        onclick="location.href='reports.html'"
+      >
+        Reports
+      </button>
+    </form>
+
+    <script>
+      document
+        .getElementById("tallyForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const data = {
+            department: document.getElementById("department").value,
+            qType: document.getElementById("qType").value,
+            referral: document.getElementById("referral").checked,
+            notes: document.getElementById("notes").value,
+            timestamp: new Date().toISOString(),
+          };
+
+          fetch("/api/tally", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          })
+            .then((res) => res.json())
+            .then((res) => {
+              if (res.success) {
+                alert("Tally recorded!");
+                document.getElementById("tallyForm").reset();
+              } else {
+                alert("Something went wrong.");
+              }
+            })
+            .catch((err) => {
+              console.error("Error submitting tally:", err);
+              alert("Submission failed.");
+            });
+        });
+    </script>
+  </body>
+</html>

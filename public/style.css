@@ -1,0 +1,97 @@
+body {
+  font-family: Poppins;
+  padding: 2rem;
+  background-color: #0369a1;
+}
+
+form {   
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 500px;
+  margin: auto;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+img {
+    justify-content: center;
+    display: flex;
+    align-items: center;
+}
+
+label {
+  margin-top: 30px;  
+  display: block;
+  align-items: center;
+}
+
+select, textarea, input[type="checkbox"], button {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+}
+
+button {
+  font-size:20px;
+  color: white;
+  border-radius: 4px;
+  margin-top: 1.5rem;
+  cursor: pointer;
+}
+
+.tally-button {
+  background-color: #0369a1;
+}
+
+.tally-button:hover {
+  background-color: #027bb5;
+}
+
+.reports-button{
+  background-color: #548811;
+}
+
+.reports-button:hover {
+  background-color: #54880f;
+}
+
+.submit {
+  max-width: 900px;
+  background-color: #d97706;
+  margin: 2rem auto;
+  padding: 0.5rem;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+#results h3 {
+  margin-top: 0;
+  font-size: 1.5rem;
+}
+
+#reportTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+#reportTable th,
+#reportTable td {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+#reportTable th {
+  background-color: #0369a1;
+  color: white;
+}
+
+#reportTable tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+#reportTable tr:hover {
+  background-color: #f1f1f1;
+}

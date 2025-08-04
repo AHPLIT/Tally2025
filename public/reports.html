@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Tally Reports</title>
+    <link rel="stylesheet" href="./style.css" />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+    </style>
+  </head>
+  <body>
+    <form id="reportForm">
+      <h1>Tally Report Generator</h1>
+
+      <label for="start">Start Date:</label>
+      <input type="date" id="start" required />
+
+      <label for="end">End Date:</label>
+      <input type="date" id="end" required />
+
+      <label for="departmentFilter">Department:</label>
+      <select id="departmentFilter">
+        <option value="all">All Departments</option>
+        <option value="Adult Services">Adult Services</option>
+        <option value="Youth Services">Youth Services</option>
+        <option value="Circulation">Circulation</option>
+        <option value="IT Department">IT Department</option>
+      </select>
+
+      <button type="submit" class="submit">Generate Report</button>
+      <button type="button" id="exportBtn" class="submit">
+        Export to Excel
+      </button>
+
+      <h2>Report Summary</h2>
+      <ul id="summaryList"></ul>
+
+      <h2>Results</h2>
+      <ul id="reportResults"></ul>
+    </form>
+
+    <script>
+      // Generate report
+      document
+        .getElementById("reportForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const start = document.getElementById("start").value;
+          const end = document.getElementById("end").value;
+          let department = document.getElementById("departmentFilter").value;
+
+          if (!department) department = "all";
+
+          let query = `/api/tally?start=${start}&end=${end}`;
+          if (department && department.toLowerCase() !== "all") {
+            query += `&department=${encodeURIComponent(department)}`;
+          }
+
+          fetch(query)
+            .then((res) => res.json())
+            .then((data) => {
+              const reportResults = document.getElementById("reportResults");
+              const summaryList = document.getElementById("summaryList");
+              reportResults.innerHTML = "";
+              summaryList.innerHTML = "";
+
+              if (!Array.isArray(data)) {
+                throw new Error(
+                  "Expected array but got: " + JSON.stringify(data)
+                );
+              }
+
+              const summaryCounts = {};
+
+              data.forEach((entry) => {
+                const li = document.createElement("li");
+                li.textContent = `[${entry.timestamp}] ${entry.department} - ${
+                  entry.qType
+                } - Referral: ${entry.referral ? "Yes" : "No"} - Notes: ${
+                  entry.notes
+                }`;
+                reportResults.appendChild(li);
+
+                summaryCounts[entry.department] =
+                  (summaryCounts[entry.department] || 0) + 1;
+              });
+
+              for (const dept in summaryCounts) {
+                const li = document.createElement("li");
+                li.textContent = `${dept}: ${summaryCounts[dept]} interactions`;
+                summaryList.appendChild(li);
+              }
+            })
+            .catch((err) => {
+              console.error("Failed to load report:", err);
+              alert("Something went wrong while generating the report.");
+            });
+        });
+
+      // Export to Excel
+      document.getElementById("exportBtn").addEventListener("click", () => {
+        const start = document.getElementById("start").value;
+        const end = document.getElementById("end").value;
+        let department = document.getElementById("departmentFilter").value;
+
+        if (!start || !end) {
+          alert("Please select start and end dates before exporting.");
+          return;
+        }
+
+        if (!department) department = "all";
+
+        let exportUrl = `/api/tally/export?start=${start}&end=${end}`;
+        if (department && department.toLowerCase() !== "all") {
+          exportUrl += `&department=${encodeURIComponent(department)}`;
+        }
+
+        // Trigger file download
+        window.location.href = exportUrl;
+      });
+    </script>
+  </body>
+</html>
