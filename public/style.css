@@ -1,97 +1,113 @@
 body {
-  font-family: Poppins;
-  padding: 2rem;
-  background-color: #0369a1;
+  font-family: "Poppins", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  background: #0298d2;
+  margin: 0;
 }
 
-form {   
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  max-width: 500px;
-  margin: auto;
+form {
+  background: #fff;
+  padding: 20px 30px;
+  border-radius: 10px;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  width: 600px;
 }
 
-img {
-    justify-content: center;
-    display: flex;
-    align-items: center;
+h2, h3 {
+  margin-bottom: 5px;
 }
 
 label {
-  margin-top: 30px;  
   display: block;
-  align-items: center;
+  margin-bottom: 5px;
 }
 
-select, textarea, input[type="checkbox"], button {
+input, select, textarea, button {
+  margin-bottom: 15px;
   width: 100%;
-  padding: 0.5rem;
-  margin-top: 0.5rem;
-  font-size: 1rem;
+  padding: 8px;
+  box-sizing: border-box;
 }
 
-button {
-  font-size:20px;
-  color: white;
-  border-radius: 4px;
-  margin-top: 1.5rem;
-  cursor: pointer;
+.form-row {
+  display: flex;
+  gap: 20px;
+}
+
+.form-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .tally-button {
-  background-color: #0369a1;
+  background-color: #74ac43;
+  border-radius: 6px;
+  cursor: pointer;
+  color:#ffffff;
+  font-size: 14px;
+  font-weight: 700;
 }
 
-.tally-button:hover {
-  background-color: #027bb5;
+.reports-button {
+  background-color: #f19238;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
 }
 
-.reports-button{
-  background-color: #548811;
+.nav-buttons {
+  margin: 10px;
+  display: flex;
+  gap: 10px;
 }
 
-.reports-button:hover {
-  background-color: #54880f;
+.nav-buttons button {
+  padding: 8px 14px;
+  font-size: 18px;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #ffffff
 }
 
-.submit {
-  max-width: 900px;
-  background-color: #d97706;
-  margin: 2rem auto;
-  padding: 0.5rem;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+/* Back button color */
+.nav-buttons .back-btn {
+  background-color: #333333; /* blue */
 }
 
-#results h3 {
-  margin-top: 0;
-  font-size: 1.5rem;
+/* Forward/Report button color */
+.nav-buttons .forward-btn {
+  background-color: #333333; /* green */
 }
 
-#reportTable {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
+/* Optional: hover effect */
+.nav-buttons button:hover {
+  opacity: 0.9;
 }
 
-#reportTable th,
-#reportTable td {
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  text-align: left;
+/* report buttons */
+.generate-btn {
+  cursor: pointer;
+  background-color: #74ac43;
+  border-radius: 6px;
+  cursor: pointer;
+  color:#ffffff;
+  font-size: 14px;
+  font-weight: 700;
 }
 
-#reportTable th {
-  background-color: #0369a1;
-  color: white;
-}
-
-#reportTable tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-#reportTable tr:hover {
-  background-color: #f1f1f1;
+.export-btn {
+  cursor: pointer;
+  background-color: #f19238;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
 }

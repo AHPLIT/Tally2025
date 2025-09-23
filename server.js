@@ -1,65 +1,61 @@
+// server.js
 const express = require("express");
 const path = require("path");
-const db = require("./db"); // your DB module
-const ExcelJS = require("exceljs");
+const db = require("./db");
 
 const app = express();
 const PORT = 3000;
 
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "public")));
 
-// Helper function to format ISO date string to MM/DD/YYYY
-function formatDateISOToMMDDYYYY(isoString) {
-  const d = new Date(isoString);
-  const mm = String(d.getMonth() + 1).padStart(2, "0"); // Months start at 0
-  const dd = String(d.getDate()).padStart(2, "0");
-  const yyyy = d.getFullYear();
-  return `${mm}/${dd}/${yyyy}`;
-}
-
+// Serve index.html
 app.get("/", (req, res) => {
-  console.log("Serving index.html");
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Serve static files from 'public'
-app.use(express.static(path.join(__dirname, "public")));
-
-// API route: Add new tally
+// Add new tally
 app.post("/api/tally", (req, res) => {
-  const { department, qType, referral, notes, timestamp } = req.body;
+  const { department, qType, referral, notes, feedback, timestamp } = req.body;
 
   if (!department || !qType || !timestamp) {
     return res.json({ success: false, error: "Missing required fields" });
   }
 
-  const sql = `INSERT INTO tallies (department, qType, referral, notes, timestamp)
-               VALUES (?, ?, ?, ?, ?)`;
-  const params = [department, qType, referral ? 1 : 0, notes || "", timestamp];
+  const sql = `INSERT INTO tallies (department, qType, referral, notes, feedback, timestamp)
+               VALUES (?, ?, ?, ?, ?, ?)`;
+  const params = [
+    department,
+    qType,
+    referral ? 1 : 0,
+    notes || "",
+    feedback || "",
+    timestamp,
+  ];
 
   db.run(sql, params, function (err) {
     if (err) {
-      console.error("DB insert error:", err);
+      console.error("DB insert error:", err.message);
       return res.json({ success: false, error: err.message });
     }
     res.json({ success: true, id: this.lastID });
   });
 });
 
-// API route: Get tally reports (with optional filters)
+// Get tallies
 app.get("/api/tally", (req, res) => {
-  let { start, end, department } = req.query;
-
+  const { start, end, department } = req.query;
   let sql = "SELECT * FROM tallies WHERE 1=1";
   const params = [];
 
   if (start) {
-    sql += " AND timestamp >= ?";
+    sql += " AND date(timestamp) >= date(?)";
     params.push(start);
   }
   if (end) {
-    sql += " AND timestamp <= ?";
+    sql += " AND date(timestamp) <= date(?)";
     params.push(end);
   }
   if (department && department.toLowerCase() !== "all") {
@@ -71,33 +67,34 @@ app.get("/api/tally", (req, res) => {
 
   db.all(sql, params, (err, rows) => {
     if (err) {
-      console.error("DB select error:", err);
+      console.error("DB select error:", err.message);
       return res.json({ success: false, error: err.message });
     }
 
-    // Format timestamps before sending response
-    const formattedRows = rows.map((row) => ({
-      ...row,
-      timestamp: formatDateISOToMMDDYYYY(row.timestamp),
-    }));
+    const formatted = rows.map((row) => {
+      const d = new Date(row.timestamp);
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      return { ...row, timestamp: `${mm}/${dd}/${yyyy}` };
+    });
 
-    res.json(formattedRows);
+    res.json(formatted);
   });
 });
 
-// API route: Export report to Excel
-app.get("/api/tally/export", async (req, res) => {
-  let { start, end, department } = req.query;
-
+// Export tallies to CSV
+app.get("/api/tally/export", (req, res) => {
+  const { start, end, department } = req.query;
   let sql = "SELECT * FROM tallies WHERE 1=1";
   const params = [];
 
   if (start) {
-    sql += " AND timestamp >= ?";
+    sql += " AND date(timestamp) >= date(?)";
     params.push(start);
   }
   if (end) {
-    sql += " AND timestamp <= ?";
+    sql += " AND date(timestamp) <= date(?)";
     params.push(end);
   }
   if (department && department.toLowerCase() !== "all") {
@@ -107,68 +104,68 @@ app.get("/api/tally/export", async (req, res) => {
 
   sql += " ORDER BY timestamp DESC";
 
-  try {
-    db.all(sql, params, async (err, rows) => {
-      if (err) {
-        console.error("Export query error:", err);
-        return res.status(500).send("Database error");
-      }
+  db.all(sql, params, (err, rows) => {
+    if (err) {
+      console.error("DB export error:", err.message);
+      return res.status(500).send("Error generating export");
+    }
 
-      const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet("Tally Report");
+    // build CSV header + rows
+    const header = [
+      "ID",
+      "Department",
+      "Interaction Type",
+      "Referral",
+      "Notes",
+      "Feedback",
+      "Timestamp",
+    ].join(",");
 
-      worksheet.columns = [
-        { header: "Department", key: "department", width: 20 },
-        { header: "Interaction Type", key: "qType", width: 20 },
-        { header: "Referral", key: "referral", width: 10 },
-        { header: "Notes", key: "notes", width: 30 },
-        { header: "Timestamp", key: "timestamp", width: 25 },
-      ];
+    const dataRows = rows.map(
+      (r) =>
+        `${r.id},${r.department},${r.qType},${r.referral ? "Yes" : "No"},"${
+          r.notes
+        }","${r.feedback}",${r.timestamp}`
+    );
 
-      rows.forEach((row) => {
-        worksheet.addRow({
-          department: row.department,
-          qType: row.qType,
-          referral: row.referral ? "Yes" : "No",
-          notes: row.notes,
-          // Format timestamp for Excel export too
-          timestamp: formatDateISOToMMDDYYYY(row.timestamp),
-        });
-      });
+    // add totals row at the end
+    const csvParts = [header, ...dataRows, ""];
+    const totalLabel =
+      department && department.toLowerCase() !== "all"
+        ? `Total for ${department}`
+        : "Grand Total";
+    csvParts.push(`${totalLabel},${rows.length} interactions`);
 
-      res.setHeader(
-        "Content-Type",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      );
-      res.setHeader(
-        "Content-Disposition",
-        "attachment; filename=tally_report.xlsx"
-      );
+    const csv = csvParts.join("\n");
 
-      await workbook.xlsx.write(res);
-      res.end();
-    });
-  } catch (err) {
-    console.error("Excel export failed:", err);
-    res.status(500).send("Failed to export report");
-  }
+    res.setHeader("Content-Disposition", "attachment; filename=tallies.csv");
+    res.setHeader("Content-Type", "text/csv");
+    res.send(csv);
+  });
 });
 
-// Keep Node event loop alive explicitly
-setInterval(() => {}, 1000 * 60);
-
-app.listen(PORT, () => {
-  console.log(`✅ Server listening on http://localhost:${PORT}`);
+// feedback endpoint
+app.get("/api/feedback", (req, res) => {
+  const sql =
+    "SELECT feedback, timestamp FROM tallies WHERE feedback IS NOT NULL AND feedback != '' ORDER BY timestamp DESC";
+  db.all(sql, [], (err, rows) => {
+    if (err) {
+      console.error("DB feedback error:", err.message);
+      return res.json([]);
+    }
+    res.json(rows);
+  });
 });
 
-process.on("exit", (code) => {
-  console.log(`Process exit event with code: ${code}`);
-});
+// Global error handling
+process.on("uncaughtException", (err) =>
+  console.error("Uncaught Exception:", err)
+);
+process.on("unhandledRejection", (reason, promise) =>
+  console.error("Unhandled Rejection at:", promise, "reason:", reason)
+);
 
-process.on("uncaughtException", (err) => {
-  console.error("Uncaught Exception:", err);
-});
-
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+// Start server
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Server running on ${PORT}`);
 });
