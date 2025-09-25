@@ -26,7 +26,7 @@
     </select>
 
     <button type="submit" class="generate-btn">Generate Report</button>
-    <button type="button" class="export-btn">Export to Excel</button>
+    <button type="button" id="exportBtn" class="export-btn">Export to CSV</button>
 
     <h2>Report Summary</h2>
     <ul id="summaryList"></ul>
@@ -37,28 +37,29 @@
     <h2>Feedback</h2>
     <ul id="feedbackResults"></ul>
 
-      <!--Back and forward buttons for user nav-->
-  <div class="nav-buttons" style="margin:10px; display:flex; gap:10px;">
-    <button class="back-btn" onclick="window.history.back()"
-      >Back</button>
-
-      <!--forward-->
-      <button class="forward-btn" onclick="window.location.href='./index.html'">Forward</button>    
-  </div>
-
+    <div class="nav-buttons" style="margin:10px; display:flex; gap:10px;">
+      <button class="back-btn" type="button" onclick="window.history.back()">Back</button>
+      <button class="forward-btn" type="button" onclick="window.location.href='./index.html'">Forward</button>    
+    </div>
   </form>
 
   <script>
-    document.getElementById("reportForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const start = document.getElementById("start").value;
-      const end = document.getElementById("end").value;
-      let department = document.getElementById("departmentFilter").value || "all";
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("reportForm");
 
-      let query = `/api/tally?start=${start}&end=${end}`;
-      if (department.toLowerCase() !== "all") query += `&department=${encodeURIComponent(department)}`;
+      // Generate Report
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const start = document.getElementById("start").value;
+        const end = document.getElementById("end").value;
+        const department = document.getElementById("departmentFilter").value || "all";
 
-      fetch(query).then(res => res.json()).then(data => {
+        let query = `/api/tally?start=${start}&end=${end}`;
+        if (department.toLowerCase() !== "all") query += `&department=${encodeURIComponent(department)}`;
+
+        const res = await fetch(query);
+        const data = await res.json();
+
         const reportResults = document.getElementById("reportResults");
         const summaryList = document.getElementById("summaryList");
         reportResults.innerHTML = "";
@@ -69,7 +70,6 @@
           const li = document.createElement("li");
           li.textContent = `[${entry.timestamp}] ${entry.department} - ${entry.qType} - Referral: ${entry.referral ? "Yes":"No"} - Notes: ${entry.notes}`;
           reportResults.appendChild(li);
-
           summaryCounts[entry.department] = (summaryCounts[entry.department] || 0) + 1;
         });
 
@@ -78,27 +78,31 @@
           li.textContent = `${dept}: ${summaryCounts[dept]} interactions`;
           summaryList.appendChild(li);
         }
-      });
 
-      fetch("/api/feedback").then(res => res.json()).then(data => {
+        // Fetch feedback
+        const fbRes = await fetch("/api/feedback");
+        const feedbackData = await fbRes.json();
         const feedbackResults = document.getElementById("feedbackResults");
         feedbackResults.innerHTML = "";
-        data.forEach(entry => {
+        feedbackData.forEach(entry => {
           const li = document.createElement("li");
           li.textContent = `[${entry.timestamp}] ${entry.feedback}`;
           feedbackResults.appendChild(li);
         });
       });
-    });
 
-    document.getElementById("exportBtn").addEventListener("click", () => {
-      const start = document.getElementById("start").value;
-      const end = document.getElementById("end").value;
-      let department = document.getElementById("departmentFilter").value || "all";
-      if (!start || !end) return alert("Please select start and end dates.");
-      let exportUrl = `/api/tally/export?start=${start}&end=${end}`;
-      if (department.toLowerCase() !== "all") exportUrl += `&department=${encodeURIComponent(department)}`;
-      window.location.href = exportUrl;
+      // Export CSV
+      document.getElementById("exportBtn").addEventListener("click", () => {
+        const start = document.getElementById("start").value;
+        const end = document.getElementById("end").value;
+        const department = document.getElementById("departmentFilter").value || "all";
+        if (!start || !end) return alert("Please select start and end dates.");
+
+        let exportUrl = `/api/tally/export?start=${start}&end=${end}`;
+        if (department.toLowerCase() !== "all") exportUrl += `&department=${encodeURIComponent(department)}`;
+
+        window.location.href = exportUrl;
+      });
     });
   </script>
 </body>

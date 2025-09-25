@@ -110,7 +110,6 @@ app.get("/api/tally/export", (req, res) => {
       return res.status(500).send("Error generating export");
     }
 
-    // build CSV header + rows
     const header = [
       "ID",
       "Department",
@@ -120,7 +119,6 @@ app.get("/api/tally/export", (req, res) => {
       "Feedback",
       "Timestamp",
     ].join(",");
-
     const dataRows = rows.map(
       (r) =>
         `${r.id},${r.department},${r.qType},${r.referral ? "Yes" : "No"},"${
@@ -128,44 +126,44 @@ app.get("/api/tally/export", (req, res) => {
         }","${r.feedback}",${r.timestamp}`
     );
 
-    // add totals row at the end
-    const csvParts = [header, ...dataRows, ""];
     const totalLabel =
       department && department.toLowerCase() !== "all"
         ? `Total for ${department}`
         : "Grand Total";
-    csvParts.push(`${totalLabel},${rows.length} interactions`);
 
-    const csv = csvParts.join("\n");
+    const csv = [
+      header,
+      ...dataRows,
+      `${totalLabel},${rows.length} interactions`,
+    ].join("\r\n");
 
-    res.setHeader("Content-Disposition", "attachment; filename=tallies.csv");
-    res.setHeader("Content-Type", "text/csv");
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=tally_report.csv"
+    );
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.send(csv);
   });
 });
 
-// feedback endpoint
+// Get feedback (optional)
 app.get("/api/feedback", (req, res) => {
   const sql =
-    "SELECT feedback, timestamp FROM tallies WHERE feedback IS NOT NULL AND feedback != '' ORDER BY timestamp DESC";
+    "SELECT feedback, timestamp FROM tallies WHERE feedback != '' ORDER BY timestamp DESC";
   db.all(sql, [], (err, rows) => {
-    if (err) {
-      console.error("DB feedback error:", err.message);
-      return res.json([]);
-    }
-    res.json(rows);
+    if (err) return res.json([]);
+    const formatted = rows.map((row) => {
+      const d = new Date(row.timestamp);
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      return { feedback: row.feedback, timestamp: `${mm}/${dd}/${yyyy}` };
+    });
+    res.json(formatted);
   });
 });
 
-// Global error handling
-process.on("uncaughtException", (err) =>
-  console.error("Uncaught Exception:", err)
-);
-process.on("unhandledRejection", (reason, promise) =>
-  console.error("Unhandled Rejection at:", promise, "reason:", reason)
-);
-
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Server running on ${PORT}`);
-});
+app.listen(PORT, () =>
+  console.log(`✅ Server running at http://localhost:${PORT}`)
+);
