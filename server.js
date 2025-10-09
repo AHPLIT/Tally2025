@@ -6,17 +6,27 @@ const db = require("./db");
 const app = express();
 const PORT = 3000;
 
-// Middleware
+// -----------------------------
+// 1️⃣ Middleware setup
+// -----------------------------
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files (HTML, CSS, JS) from the "public" folder
 app.use(express.static(path.join(__dirname, "public")));
 
-// Serve index.html
+// -----------------------------
+// 2️⃣ Serve index.html (Main Page)
+// -----------------------------
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Add new tally
+// -----------------------------
+// 3️⃣ API ROUTES
+// -----------------------------
+
+// ➤ Add new tally entry
 app.post("/api/tally", (req, res) => {
   const { department, qType, referral, notes, feedback, timestamp } = req.body;
 
@@ -44,7 +54,7 @@ app.post("/api/tally", (req, res) => {
   });
 });
 
-// Get tallies
+// ➤ Get tallies (with optional filters)
 app.get("/api/tally", (req, res) => {
   const { start, end, department } = req.query;
   let sql = "SELECT * FROM tallies WHERE 1=1";
@@ -83,7 +93,27 @@ app.get("/api/tally", (req, res) => {
   });
 });
 
-// Export tallies to CSV
+// Get interaction types (menu items) for a department
+app.get("/api/types/:department", (req, res) => {
+  const department = req.params.department;
+
+  if (!department) {
+    return res.status(400).json({ error: "Department required" });
+  }
+
+  const sql = "SELECT item_name FROM menus WHERE department = ? ORDER BY item_name ASC";
+  db.all(sql, [department], (err, rows) => {
+    if (err) {
+      console.error("DB menu select error:", err.message);
+      return res.status(500).json({ error: err.message });
+    }
+
+    const items = rows.map(row => row.item_name);
+    res.json(items);
+  });
+});
+
+// ➤ Export tallies to CSV
 app.get("/api/tally/export", (req, res) => {
   const { start, end, department } = req.query;
   let sql = "SELECT * FROM tallies WHERE 1=1";
@@ -146,7 +176,7 @@ app.get("/api/tally/export", (req, res) => {
   });
 });
 
-// Get feedback (optional)
+// ➤ Get feedback only (optional feature)
 app.get("/api/feedback", (req, res) => {
   const sql =
     "SELECT feedback, timestamp FROM tallies WHERE feedback != '' ORDER BY timestamp DESC";
@@ -163,7 +193,9 @@ app.get("/api/feedback", (req, res) => {
   });
 });
 
-// Start server
+// -----------------------------
+// 4️⃣ Start the server
+// -----------------------------
 app.listen(PORT, () =>
   console.log(`✅ Server running at http://localhost:${PORT}`)
 );

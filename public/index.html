@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tally Rebirth</title>
+  <title>AHPL Tally</title>
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
@@ -23,13 +23,7 @@
 
     <h3><label>Interaction Type:</label></h3>
     <select id="qType" required>
-      <option value="Collections">Collections</option>
-      <option value="Research">Research</option>
-      <option value="Technology">Technology</option>
-      <option value="Patron Account">Patron Account</option>
-      <option value="Room Bookings">Room Bookings</option>
-      <option value="Programs">Programs</option>
-      <option value="Other">Other</option>
+      <option value="">Select a department first</option>
     </select>
 
     <h3><label> Made Referral? <input type="checkbox" id="referral"> </label></h3>
@@ -60,30 +54,81 @@
   </form>
 
   <script>
-    document.getElementById("tallyForm").addEventListener("submit", function (e) {
-      e.preventDefault();
-      const data = {
-        department: document.getElementById("department").value,
-        qType: document.getElementById("qType").value,
-        referral: document.getElementById("referral").checked,
-        notes: document.getElementById("notes").value,
-        feedback: document.getElementById("feedback").value,
-        timestamp: new Date().toISOString()
-      };
-      fetch("/api/tally", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      })
+    // department specific menu data
+    // meant to change dynamically based on dept.
+    const departmentSelect = document.getElementById("department");
+  const qTypeSelect = document.getElementById("qType");
+  const form = document.getElementById("tallyForm");
+
+  // 🟢 When department changes, fetch interaction types
+  departmentSelect.addEventListener("change", () => {
+    const department = departmentSelect.value;
+
+    // Clear existing qType options
+    qTypeSelect.innerHTML = '<option value="">Select</option>';
+
+    if (!department) return; // if no department chosen, stop here
+
+    // Fetch department-specific interaction types
+    fetch(`/api/types/${encodeURIComponent(department)}`)
       .then(res => res.json())
-      .then(res => {
-        if (res.success) {
-          alert("Tally recorded!");
-          document.getElementById("tallyForm").reset();
-        } else alert("Something went wrong.");
+      .then(types => {
+        if (types.length === 0) {
+          const opt = document.createElement("option");
+          opt.value = "Other";
+          opt.textContent = "Other";
+          qTypeSelect.appendChild(opt);
+        } else {
+          types.forEach(type => {
+            const opt = document.createElement("option");
+            opt.value = type;
+            opt.textContent = type;
+            qTypeSelect.appendChild(opt);
+          });
+        }
       })
-      .catch(err => { console.error(err); alert("Submission failed."); });
+      .catch(err => {
+        console.error("Failed to load interaction types:", err);
+        const opt = document.createElement("option");
+        opt.value = "Other";
+        opt.textContent = "Other";
+        qTypeSelect.appendChild(opt);
+      });
+  });
+
+  // 🟢 Form submission
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+
+    const data = {
+      department: departmentSelect.value,
+      qType: qTypeSelect.value,
+      referral: document.getElementById("referral").checked,
+      notes: document.getElementById("notes").value,
+      feedback: document.getElementById("feedback").value,
+      timestamp: new Date().toISOString()
+    };
+
+    fetch("/api/tally", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(res => {
+      if (res.success) {
+        alert("Tally recorded!");
+        form.reset();
+        qTypeSelect.innerHTML = '<option value="">Select</option>'; // reset menu
+      } else {
+        alert("Something went wrong while recording.");
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Submission failed.");
     });
+  });
   </script>
 </body>
 </html>
