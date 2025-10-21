@@ -54,15 +54,30 @@
   </form>
 
   <script>
-    // department specific menu data
-    // meant to change dynamically based on dept.
-    const departmentSelect = document.getElementById("department");
+  const departmentSelect = document.getElementById("department");
   const qTypeSelect = document.getElementById("qType");
   const form = document.getElementById("tallyForm");
 
-  // 🟢 When department changes, fetch interaction types
+  // 🔹 Load saved department on page load
+  window.addEventListener("DOMContentLoaded", () => {
+    const savedDept = localStorage.getItem("selectedDepartment");
+    if (savedDept) {
+      departmentSelect.value = savedDept;
+      // Trigger change event so correct qType options load
+      departmentSelect.dispatchEvent(new Event("change"));
+    }
+  });
+
+  // 🔹 When department changes
   departmentSelect.addEventListener("change", () => {
     const department = departmentSelect.value;
+
+    // Save or clear from localStorage
+    if (department) {
+      localStorage.setItem("selectedDepartment", department);
+    } else {
+      localStorage.removeItem("selectedDepartment");
+    }
 
     // Clear existing qType options
     qTypeSelect.innerHTML = '<option value="">Select</option>';
@@ -96,7 +111,7 @@
       });
   });
 
-  // 🟢 Form submission
+  // 🔹 Form submission
   form.addEventListener("submit", e => {
     e.preventDefault();
 
@@ -114,21 +129,28 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
     })
-    .then(res => res.json())
-    .then(res => {
-      if (res.success) {
-        alert("Tally recorded!");
-        form.reset();
-        qTypeSelect.innerHTML = '<option value="">Select</option>'; // reset menu
-      } else {
-        alert("Something went wrong while recording.");
-      }
-    })
-    .catch(err => {
-      console.error(err);
-      alert("Submission failed.");
-    });
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) {
+          alert("Tally recorded!");
+          form.reset();
+          qTypeSelect.innerHTML = '<option value="">Select</option>'; // reset menu
+
+          // Restore saved department so they don’t have to reselect
+          const savedDept = localStorage.getItem("selectedDepartment");
+          if (savedDept) {
+            departmentSelect.value = savedDept;
+            departmentSelect.dispatchEvent(new Event("change"));
+          }
+        } else {
+          alert("Something went wrong while recording.");
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Submission failed.");
+      });
   });
-  </script>
+</script>
 </body>
 </html>
