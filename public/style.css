@@ -9,6 +9,7 @@ body {
 }
 
 form {
+  margin-top: 30px;
   background: #fff;
   padding: 20px 30px;
   border-radius: 10px;

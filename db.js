@@ -63,19 +63,34 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
             if (row.count == 0) {
               console.log("Seeding default department menu options...");
               const defaultMenus = [
-                ["Adult Services", "Research Help"],
-                ["Adult Services", "Patron Question"],
-                ["Adult Services", "Programming"],
+                ["Adult Services", "Research"],
+                ["Adult Services", "Patron Accounts"],
+                ["Adult Services", "Reading Challenges/Beanstack"],
+                ["Adult Services", "Programs"],
                 ["Adult Services", "Room Bookings"],
                 ["Adult Services", "Collections"],
-                ["Youth Services", "Patron Question"],
-                ["Youth Services", "Programming"],
-                ["Circulation", "Check In / Check Out"],
-                ["Circulation", "Library Card"],
-                ["Circulation", "Fines Inquiry"],
-                ["Circulation", "Hold Request"],
-                ["IT Department", "Printer/Copier"],
-                ["IT Department", "Tech Question"],
+                ["Adult Services", "Technology"],
+
+                ["Youth Services", "Collections"],
+                ["Youth Services", "Programs"],
+                ["Youth Services", "Reading Challenges/Beanstack"],
+                ["Youth Services", "Scavenger Hunts"],
+                ["Youth Services", "Patron Accounts"],
+                ["Youth Services", "Technology"],
+
+                ["Circulation", "Patron Accounts"],
+                ["Circulation", "Fees"],
+                ["Circulation", "Lockers/Self Checks"],
+                ["Circulation", "Programs"],
+                ["Circulation", "Collections"],
+                ["Circulation", "Technology"],
+                ["Circulation", "Other"],
+
+                ["IT Department", "Printer/Scanner"],
+                ["IT Department", "Personal Device Help"],
+                ["IT Department", "Library Computer"],
+                ["IT Department", "Library Digital Services"]
+                ["IT Department", "Room Bookings"],
                 ["IT Department", "1-on-1"],
                 ["IT Department", "Other"],
               ];

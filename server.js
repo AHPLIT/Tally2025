@@ -97,19 +97,16 @@ app.get("/api/tally", (req, res) => {
 app.get("/api/types/:department", (req, res) => {
   const department = req.params.department;
 
-  if (!department) {
-    return res.status(400).json({ error: "Department required" });
-  }
-
-  const sql = "SELECT item_name FROM menus WHERE department = ? ORDER BY item_name ASC";
+  const sql = `SELECT item_name FROM menus WHERE department = ? ORDER BY item_name ASC`;
   db.all(sql, [department], (err, rows) => {
     if (err) {
-      console.error("DB menu select error:", err.message);
-      return res.status(500).json({ error: err.message });
+      console.error("DB menu fetch error:", err.message);
+      return res.status(500).json([]);
     }
 
-    const items = rows.map(row => row.item_name);
-    res.json(items);
+    // Return just an array of strings
+    const types = rows.map((r) => r.item_name);
+    res.json(types);
   });
 });
 
