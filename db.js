@@ -70,6 +70,7 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
                 ["Adult Services", "Room Bookings"],
                 ["Adult Services", "Collections"],
                 ["Adult Services", "Technology"],
+                ["Adult Services", "Other"],
 
                 ["Youth Services", "Collections"],
                 ["Youth Services", "Programs"],
@@ -77,6 +78,7 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
                 ["Youth Services", "Scavenger Hunts"],
                 ["Youth Services", "Patron Accounts"],
                 ["Youth Services", "Technology"],
+                ["Youth Services", "Other"],
 
                 ["Circulation", "Patron Accounts"],
                 ["Circulation", "Fees"],
@@ -89,8 +91,8 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
                 ["IT Department", "Printer/Scanner"],
                 ["IT Department", "Personal Device Help"],
                 ["IT Department", "Library Computer"],
-                ["IT Department", "Library Digital Services"]
-                ["IT Department", "Room Bookings"],
+                ["IT Department", "Library Digital Services"],
+                [("IT Department", "Room Bookings")],
                 ["IT Department", "1-on-1"],
                 ["IT Department", "Other"],
               ];
