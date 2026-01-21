@@ -1,4 +1,3 @@
-// db.js
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 const fs = require("fs");
@@ -33,35 +32,26 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
         timestamp TEXT
       )`,
       (err) => {
-        if (err) {
-          console.error("Table creation error:", err.message);
-        } else {
-          console.log("✅ Table 'tallies' ready");
-        }
+        if (err) console.error("Table creation error:", err.message);
+        else console.log("✅ Table 'tallies' ready");
       }
     );
-    // create the menus table if it doesn't exist
+
+    // Create the menus table
     db.run(
       `CREATE TABLE IF NOT EXISTS menus (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      department TEXT,
-      item_name TEXT
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        department TEXT,
+        item_name TEXT
       )`,
       (err) => {
-        if (err) {
-          console.error("Table creation error (menus):", err.message);
-        } else {
-          console.log("Table 'menus' ready!");
-
-          // seed default value only if table is empty
+        if (err) console.error("Table creation error (menus):", err.message);
+        else {
+          console.log("✅ Table 'menus' ready!");
+          // Seed default menus if empty
           db.get("SELECT COUNT(*) AS count FROM menus", (err, row) => {
-            if (err) {
-              console.error("Menu count check error:", err.message);
-              return;
-            }
-
-            if (row.count == 0) {
-              console.log("Seeding default department menu options...");
+            if (err) return console.error(err.message);
+            if (row.count === 0) {
               const defaultMenus = [
                 ["Adult Services", "Research"],
                 ["Adult Services", "Patron Accounts"],
@@ -92,23 +82,21 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
                 ["IT Department", "Personal Device Help"],
                 ["IT Department", "Library Computer"],
                 ["IT Department", "Library Digital Services"],
-                [("IT Department", "Room Bookings")],
+                ["IT Department", "Room Bookings"],
                 ["IT Department", "1-on-1"],
                 ["IT Department", "Other"],
               ];
 
-              const stmt = db.prepare("INSERT INTO menus (department, item_name) VALUES (?, ?)");
-              defaultMenus.forEach(([deprecate, item]) => stmt.run(deprecate, item));
-              stmt.finalize(() => console.log("Default menus seeded successfully"));
-            } else {
-              console.log(`Menus table already has ${row.count} entries`);
+              const stmt = db.prepare(
+                "INSERT INTO menus (department, item_name) VALUES (?, ?)"
+              );
+              defaultMenus.forEach(([dept, item]) => stmt.run(dept, item));
+              stmt.finalize(() => console.log("✅ Default menus seeded"));
             }
-          })
+          });
         }
       }
-    )
-
-
+    );
   }
 });
 

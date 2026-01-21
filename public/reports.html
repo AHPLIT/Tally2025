@@ -4,18 +4,27 @@
   <meta charset="UTF-8">
   <title>Tally Reports</title>
   <link rel="stylesheet" href="./style.css">
+  <style>
+    /* Quick highlight effect for jump-to-date */
+    .highlight {
+      background-color: #ffff99;
+      transition: background-color 2s ease;
+    }
+  </style>
 </head>
 <body>
   <form id="reportForm">
     <img src="./AHPL-logo.svg" alt="AHPL-logo">
     <h1>Tally Report Generator</h1>
 
+    <!-- Date range filter -->
     <label for="start">Start Date:</label>
     <input type="date" id="start" required>
 
     <label for="end">End Date:</label>
     <input type="date" id="end" required>
 
+    <!-- Department filter -->
     <label for="departmentFilter">Department:</label>
     <select id="departmentFilter">
       <option value="all">All Departments</option>
@@ -28,14 +37,18 @@
     <button type="submit" class="generate-btn">Generate Report</button>
     <button type="button" id="exportBtn" class="export-btn">Export to CSV</button>
 
+    <!-- Jump to date -->
+    <div style="margin-top:10px;">
+      <label for="jumpDate">Jump to Date: (This will take you to the very first instance of that date. If no interactions occurred on that chosen date, the page will not move!)</label>
+      <input type="date" id="jumpDate">
+      <button type="button" id="jumpBtn">Go</button>
+    </div>
+
     <h2>Report Summary</h2>
     <ul id="summaryList"></ul>
 
     <h2>Results</h2>
     <ul id="reportResults"></ul>
-
-    <h2>Feedback</h2>
-    <ul id="feedbackResults"></ul>
 
     <div class="nav-buttons" style="margin:10px; display:flex; gap:10px;">
       <button class="back-btn" type="button" onclick="window.history.back()">Back</button>
@@ -46,30 +59,37 @@
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const form = document.getElementById("reportForm");
+      const reportResults = document.getElementById("reportResults");
+      const summaryList = document.getElementById("summaryList");
 
       // Generate Report
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
+
         const start = document.getElementById("start").value;
         const end = document.getElementById("end").value;
         const department = document.getElementById("departmentFilter").value || "all";
 
+        // Fetch interactions (with feedback included)
         let query = `/api/tally?start=${start}&end=${end}`;
-        if (department.toLowerCase() !== "all") query += `&department=${encodeURIComponent(department)}`;
+        if (department.toLowerCase() !== "all") {
+          query += `&department=${encodeURIComponent(department)}`;
+        }
 
         const res = await fetch(query);
         const data = await res.json();
 
-        const reportResults = document.getElementById("reportResults");
-        const summaryList = document.getElementById("summaryList");
         reportResults.innerHTML = "";
         summaryList.innerHTML = "";
         const summaryCounts = {};
 
         data.forEach(entry => {
           const li = document.createElement("li");
-          li.textContent = `[${entry.timestamp}] ${entry.department} - ${entry.qType} - Referral: ${entry.referral ? "Yes":"No"} - Notes: ${entry.notes}`;
+          li.id = `interaction-${entry.id}`;
+          li.dataset.date = entry.timestamp; // store for jump-to-date
+          li.textContent = `[${entry.timestamp}] ${entry.department} - ${entry.qType} - Referral: ${entry.referral ? "Yes":"No"} - Notes: ${entry.notes}${entry.feedback ? ` - Feedback: ${entry.feedback}` : ""}`;
           reportResults.appendChild(li);
+
           summaryCounts[entry.department] = (summaryCounts[entry.department] || 0) + 1;
         });
 
@@ -78,17 +98,6 @@
           li.textContent = `${dept}: ${summaryCounts[dept]} interactions`;
           summaryList.appendChild(li);
         }
-
-        // Fetch feedback
-        const fbRes = await fetch("/api/feedback");
-        const feedbackData = await fbRes.json();
-        const feedbackResults = document.getElementById("feedbackResults");
-        feedbackResults.innerHTML = "";
-        feedbackData.forEach(entry => {
-          const li = document.createElement("li");
-          li.textContent = `[${entry.timestamp}] ${entry.feedback}`;
-          feedbackResults.appendChild(li);
-        });
       });
 
       // Export CSV
@@ -102,6 +111,24 @@
         if (department.toLowerCase() !== "all") exportUrl += `&department=${encodeURIComponent(department)}`;
 
         window.location.href = exportUrl;
+      });
+
+      // Jump to date
+      document.getElementById("jumpBtn").addEventListener("click", () => {
+        const jumpDate = document.getElementById("jumpDate").value;
+        if (!jumpDate) return;
+
+        const listItems = document.querySelectorAll("#reportResults li");
+        const jumpDateFormatted = new Date(jumpDate).toLocaleDateString("en-US");
+
+        for (const li of listItems) {
+          if (li.dataset.date === jumpDateFormatted) {
+            li.scrollIntoView({ behavior: "smooth", block: "start" });
+            li.classList.add("highlight");
+            setTimeout(() => li.classList.remove("highlight"), 2000);
+            break;
+          }
+        }
       });
     });
   </script>
