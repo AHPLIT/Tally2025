@@ -21,7 +21,7 @@ app.post("/api/tally", (req, res) => {
     return res.json({ success: false, error: "Missing required fields" });
 
   // Store timestamp in ISO format
-  const timestamp = new Date().toISOString().slice(0, 19).replace("T", " ");
+  const timestamp = new Date().toISOString().replace("T", " ").replace("Z", "");
 
   const sql = `INSERT INTO tallies (department, qType, referral, notes, feedback, timestamp)
                VALUES (?, ?, ?, ?, ?, ?)`;
