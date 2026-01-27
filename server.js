@@ -42,7 +42,7 @@ app.post("/api/tally", (req, res) => {
 
 // ➤ Get tallies (with optional date & department filters)
 app.get("/api/tally", (req, res) => {
-  const { start, end, department } = req.query;
+  const { start, end, department, feedbackOnly } = req.query;
   let sql = "SELECT * FROM tallies WHERE 1=1";
   const params = [];
 
@@ -57,6 +57,10 @@ app.get("/api/tally", (req, res) => {
   if (department && department.toLowerCase() !== "all") {
     sql += " AND department = ?";
     params.push(department);
+  }
+
+  if (feedbackOnly === "true") {
+    sql += " AND feedback is NOT NULL AND feedback != ''";
   }
 
   sql += " ORDER BY timestamp DESC";

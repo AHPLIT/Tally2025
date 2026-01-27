@@ -14,7 +14,7 @@ form {
   padding: 20px 30px;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  width: 600px;
+  width: 800px;
 }
 
 h2, h3 {
@@ -24,6 +24,10 @@ h2, h3 {
 label {
   display: block;
   margin-bottom: 5px;
+}
+
+#check {
+  text-align: center;
 }
 
 input, select, textarea, button {
@@ -111,4 +115,28 @@ input, select, textarea, button {
   color: #ffffff;
   font-size: 14px;
   font-weight: 700;
+}
+
+/* Report result cards */
+#reportResults li,
+#feedbackResults li {
+  border: 1px solid #ccc;
+  border-radius: 6px;        /* subtle rounding (can be 0 for sharp squares) */
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background-color: #fff;
+  line-height: 1.4;
+}
+
+/* Optional: hover effect for readability */
+#reportResults li:hover,
+#feedbackResults li:hover {
+  background-color: #f5f7fa;
+}
+
+/* Remove default bullet points */
+#reportResults,
+#feedbackResults {
+  list-style: none;
+  padding-left: 0;
 }

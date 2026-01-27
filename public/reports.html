@@ -34,6 +34,12 @@
       <option value="IT Department">IT Department</option>
     </select>
 
+    <!--checkbox for showing only tallys with patron feedback-->
+    <label id="check">
+      Only Show Tallies with Patron Feedback:
+      <input type="checkbox" id="feedbackOnly">
+    </label>
+
     <button type="submit" class="generate-btn">Generate Report</button>
     <button type="button" id="exportBtn" class="export-btn">Export to CSV</button>
 
@@ -70,13 +76,21 @@
         const end = document.getElementById("end").value;
         const department = document.getElementById("departmentFilter").value || "all";
 
-        // Fetch interactions (with feedback included)
-        let query = `/api/tally?start=${start}&end=${end}`;
+        // show only tallies with patron feedback if checkbox is marked
+        const feedbackOnly = document.getElementById("feedbackOnly").checked;
+
+        let tallyQuery = `/api/tally?start=${start}&end=${end}`;
+
         if (department.toLowerCase() !== "all") {
-          query += `&department=${encodeURIComponent(department)}`;
+          tallyQuery += `&department=${encodeURIComponent(department)}`;
         }
 
-        const res = await fetch(query);
+        if (feedbackOnly) {
+          tallyQuery += `&feedbackOnly=true`;
+        }
+
+        // Fetch interactions (with feedback included)
+        const res = await fetch(tallyQuery);
         const data = await res.json();
 
         reportResults.innerHTML = "";
