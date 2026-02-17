@@ -34,7 +34,7 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
       (err) => {
         if (err) console.error("Table creation error:", err.message);
         else console.log("✅ Table 'tallies' ready");
-      }
+      },
     );
 
     // Create the menus table
@@ -60,6 +60,7 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
                 ["Adult Services", "Room Bookings"],
                 ["Adult Services", "Collections"],
                 ["Adult Services", "Technology"],
+                ["Adult Services", "Scavenger Hunt"],
                 ["Adult Services", "Other"],
 
                 ["Youth Services", "Collections"],
@@ -88,14 +89,14 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
               ];
 
               const stmt = db.prepare(
-                "INSERT INTO menus (department, item_name) VALUES (?, ?)"
+                "INSERT INTO menus (department, item_name) VALUES (?, ?)",
               );
               defaultMenus.forEach(([dept, item]) => stmt.run(dept, item));
               stmt.finalize(() => console.log("✅ Default menus seeded"));
             }
           });
         }
-      }
+      },
     );
   }
 });
